@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AeroChat Dashboard</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
+    <style>
+        /* <-- All your CSS remains exactly the same --> */
+        :root {
+            --bg: #f5f3ff;
+            --card: #ffffff;
+            --text: #1f2937;
+            --border: #e5e7eb;
+            --purple: #6d28d9;
+            --purple-dark: #5b21b6;
+            --purple-light: #ede9fe;
+            --success: #16a34a;
+            --danger: #dc2626;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 24px;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .header { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; }
+        .header img { width: 44px; height: 44px; border-radius: 10px; background: white; padding: 6px; box-shadow: 0 6px 20px rgba(109,40,217,0.25);}
+        .header h2 { margin: 0; font-size: 26px; font-weight: 600; color: var(--purple-dark); }
+
+        .filters { display: flex; gap: 14px; align-items: center; background: var(--card); padding: 16px; border-radius: 14px; box-shadow: 0 10px 25px rgba(109,40,217,0.12); margin-bottom: 20px; }
+        .search-box { flex: 1; }
+        .search-box input { width: 100%; padding: 14px 16px; border-radius: 12px; border: 2px solid var(--purple); font-size: 15px; outline: none; transition: 0.25s; }
+        .search-box input:focus { box-shadow: 0 0 0 4px var(--purple-light); }
+
+        select { padding: 12px; border-radius: 10px; border: 1px solid var(--border); cursor: pointer; }
+        button { padding: 12px 20px; border-radius: 12px; border: none; background: var(--purple); color: white; font-weight: 600; cursor: pointer; transition: 0.25s; }
+        button:hover { background: var(--purple-dark); }
+
+        .toggle { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: var(--purple-dark); }
+        .toggle input { display: none; }
+        .slider { width: 46px; height: 24px; background: #d1d5db; border-radius: 999px; position: relative; cursor: pointer; transition: 0.3s; }
+        .slider::before { content: ""; width: 18px; height: 18px; background: white; border-radius: 50%; position: absolute; top: 3px; left: 4px; transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.25); }
+        .toggle input:checked + .slider { background: linear-gradient(135deg, var(--purple), #8b5cf6); box-shadow: 0 0 14px rgba(109,40,217,0.7); }
+        .toggle input:checked + .slider::before { transform: translateX(20px); }
+
+        .table-card { background: var(--card); border-radius: 16px; overflow-x: auto; box-shadow: 0 10px 30px rgba(109,40,217,0.12); }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { background: var(--purple); color: white; padding: 14px; text-align: left; white-space: nowrap; }
+        td { padding: 12px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+        tbody tr:hover { background: var(--purple-light); }
+
+        .logo { width: 38px; height: 38px; border-radius: 8px; background: white; object-fit: contain; padding: 4px; }
+        .pill { padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+        .active { background: rgba(22,163,74,.15); color: var(--success); }
+        .inactive { background: rgba(220,38,38,.15); color: var(--danger); }
+        a { color: var(--purple); text-decoration: none; font-weight: 600; }
+        a:hover { text-decoration: underline; }
+    </style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<div class="header">
+    <img src="/static/aerochatlogo.jpg" alt="AeroChat Logo">
+    <h2>AeroChat Dashboard</h2>
+</div>
+
+<!-- FILTER BAR -->
+<div class="filters">
+    <div class="search-box">
+        <input
+            type="text"
+            id="search"
+            placeholder="Search Brand / Email / Website / Country"
+            value="{{ search }}"
+            onkeydown="if(event.key==='Enter') applyFilters()"
+        >
+    </div>
+
+    <!-- ✅ FIX 1: DAYS DROPDOWN -->
+    <select id="days">
+        <option value="7"  {{ 'selected' if days == 7 else '' }}>Last 7 Days</option>
+        <option value="30" {{ 'selected' if days == 30 else '' }}>Last 30 Days</option>
+        <option value="90" {{ 'selected' if days == 90 else '' }}>Last 90 Days</option>
+    </select>
+
+    <label class="toggle">
+        <input type="checkbox" id="showAll" {{ 'checked' if show_all else '' }}>
+        <span class="slider"></span>
+        Show All
+    </label>
+
+    <button onclick="applyFilters()">Search</button>
+</div>
+
+<!-- TABLE -->
+<div class="table-card">
+    <table>
+        <thead>
+            <tr>
+                <th>Logo</th>
+                <th>Brand</th>
+                <th>Email</th>
+                <th>Website</th>
+                <th>Country</th>
+                <th>Plan</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Contacts</th>
+                <th>KB</th>
+                <th>Created</th>
+            </tr>
+        </thead>
+
+        <tbody>
+        {% for row in data %}
+            <tr>
+                <td>
+                    {% if row.brand_logo %}
+                        <img src="{{ row.brand_logo }}" class="logo">
+                    {% else %}—{% endif %}
+                </td>
+                <td>{{ row.brand_name }}</td>
+                <td>{{ row.company_email }}</td>
+                <td>
+                    {% if row.website_url %}
+                        <a href="{{ row.website_url }}" target="_blank">{{ row.website_url }}</a>
+                    {% else %}—{% endif %}
+                </td>
+                <td>{{ row.country or '—' }}</td>
+                <td>{{ row.plan_name or 'No Plan' }}</td>
+                <td>{{ row.plan_type or '—' }}</td>
+
+                <!-- ✅ FIX 2: STATUS TEXT -->
+                <td>
+                    {% if row.status == 1 %}
+                        <span class="pill active">Active</span>
+                    {% else %}
+                        <span class="pill inactive">Inactive</span>
+                    {% endif %}
+                </td>
+
+                <td>{{ row.contact_count or 0 }}</td>
+                <td>{{ row.knowledgebase_count or 0 }}</td>
+                <td>{{ row.company_created.strftime('%Y-%m-%d') }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+function applyFilters() {
+    const params = new URLSearchParams({
+        search: document.getElementById("search").value.trim(),
+        days: document.getElementById("days").value,
+        show_all: document.getElementById("showAll").checked ? 1 : 0
+    });
+    window.location.href = "/chat/test/aerochat-data?" + params.toString();
+}
+</script>
+
+</body>
+</html>
